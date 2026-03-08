@@ -130,6 +130,7 @@ public:
     Q_PROPERTY(QString artist READ getArtist NOTIFY currentMetaChanged FINAL)
     Q_PROPERTY(QString album READ getAlbum NOTIFY currentMetaChanged FINAL)
     Q_PROPERTY(QUrl artwork READ getArtwork NOTIFY currentMetaChanged FINAL)
+    Q_PROPERTY(QString currentSubtitleText READ getCurrentSubtitleText NOTIFY currentSubtitleTextChanged FINAL)
 
     //tracks
     Q_PROPERTY(TrackListModel* videoTracks READ getVideoTracks CONSTANT FINAL)
@@ -397,6 +398,7 @@ public slots:
     QString getArtist() const;
     QString getAlbum() const;
     QUrl getArtwork() const;
+    QString getCurrentSubtitleText() const;
 
     //Renderer
     RendererManager* getRendererManager();
@@ -476,6 +478,7 @@ signals:
     void statisticsUpdated( const input_stats_t& stats );
     void infoChanged( input_item_t* );
     void currentMetaChanged( input_item_t* );
+    void currentSubtitleTextChanged( const QString& );
     void metaChanged( input_item_t *);
     void artChanged( QString ); /* current item art ( same as item == NULL ) */
     void artChanged( input_item_t * );

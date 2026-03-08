@@ -195,6 +195,7 @@ public:
     QString m_album;
     QUrl m_artwork;
     QUrl m_url;
+    QString m_currentSubtitleText;
 };
 
 #endif /* QVLC_INPUT_MANAGER_P_H_ */

@@ -34,6 +34,8 @@
 #include <vlc_arrays.h>
 #include <vlc_plugin.h>
 #include <vlc_vout.h>
+#include <vlc_vout_osd.h>
+#include <vlc_subpicture.h>
 #include <vlc_aout.h>
 #include <vlc_filter.h>
 #include <vlc_queue.h>
@@ -184,6 +186,7 @@ typedef struct
     int             i_effect;
     bool            dead;
     vlc_thread_t    thread;
+    char            *psz_lyrics; /* current lyrics OSD text */
 } filter_sys_t;
 
 static const struct vlc_filter_operations filter_ops = {
@@ -323,6 +326,7 @@ static int Open( vlc_object_t *p_this )
     }
 
     p_sys->dead = false;
+    p_sys->psz_lyrics = NULL;
     vlc_queue_Init(&p_sys->queue, offsetof (block_t, p_next));
 
     if( vlc_clone( &p_sys->thread, Thread, p_filter ) )
@@ -378,6 +382,27 @@ static block_t *DoRealWork( filter_t *p_filter, block_t *p_in_buf )
 
     p_outpic->date = p_in_buf->i_pts + (p_in_buf->i_length / 2);
 
+    /* Display synchronized lyrics text on the vout if available */
+    {
+        char *psz_text = var_InheritString( p_filter, "lyrics-text" );
+        if( psz_text != NULL && psz_text[0] != '\0' )
+        {
+            if( p_sys->psz_lyrics == NULL ||
+                strcmp( p_sys->psz_lyrics, psz_text ) != 0 )
+            {
+                free( p_sys->psz_lyrics );
+                p_sys->psz_lyrics = psz_text;
+                vout_OSDText( p_sys->p_vout, VOUT_SPU_CHANNEL_OSD,
+                              SUBPICTURE_ALIGN_BOTTOM,
+                              VLC_TICK_FROM_SEC( 10 ), psz_text );
+            }
+            else
+                free( psz_text );
+        }
+        else
+            free( psz_text );
+    }
+
     vout_PutPicture( p_sys->p_vout, p_outpic );
     return p_in_buf;
 }
@@ -431,5 +456,6 @@ static void Close( filter_t * p_filter )
 
     picture_pool_Release(p_sys->pool);
     free( p_sys->effect );
+    free( p_sys->psz_lyrics );
     free( p_sys );
 }

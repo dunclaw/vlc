@@ -511,6 +511,38 @@ FocusScope {
                             }
                         }
 
+                        /* Synchronized lyrics display */
+                        Text {
+                            id: lyricsLabel
+
+                            Layout.alignment: Qt.AlignHCenter
+                            Layout.topMargin: VLCStyle.margin_large
+                            Layout.maximumWidth: centerContent.width - VLCStyle.margin_large * 2
+                            Layout.preferredWidth: implicitWidth
+
+                            visible: text.length > 0
+
+                            text: Player.currentSubtitleText
+                            font.pixelSize: VLCStyle.fontSize_xlarge
+                            font.weight: Font.DemiBold
+                            horizontalAlignment: Text.AlignHCenter
+                            wrapMode: Text.WordWrap
+                            color: centerTheme.fg.primary
+                            opacity: 1.0
+
+                            Accessible.role: Accessible.StaticText
+                            Accessible.name: qsTr("Lyrics")
+                            Accessible.description: text
+
+                            onTextChanged: lyricsFadeAnim.restart()
+
+                            SequentialAnimation {
+                                id: lyricsFadeAnim
+                                NumberAnimation { target: lyricsLabel; property: "opacity"; to: 0.3; duration: 80 }
+                                NumberAnimation { target: lyricsLabel; property: "opacity"; to: 1.0; duration: 150 }
+                            }
+                        }
+
                         Widgets.NavigableRow {
                             id: audioControls
 
