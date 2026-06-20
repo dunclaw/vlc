@@ -37,6 +37,8 @@
 #include <vlc_filter.h>
 #include <vlc_picture_pool.h>
 
+#include "lyrics_overlay.h"
+
 #ifndef WORDS_BIGENDIAN
 #define WORDS_BIGENDIAN 0
 #define DEFINED_WORDS_BIGENDIAN
@@ -108,6 +110,8 @@ typedef struct
 
     date_t        date;
 
+    lyrics_overlay_t *p_lyrics;
+
 } goom_thread_t;
 
 static block_t *DoWork ( filter_t *, block_t * );
@@ -164,6 +168,8 @@ static int Open( vlc_object_t *p_this )
     p_thread->i_speed = MAX_SPEED - var_InheritInteger( p_filter, "goom-speed" );
     if( p_thread->i_speed < 0 )
         p_thread->i_speed = 0;
+
+    p_thread->p_lyrics = lyrics_overlay_New( VLC_OBJECT(p_filter), width, height );
 
     vlc_mutex_init( &p_thread->lock );
     vlc_cond_init( &p_thread->wait );
@@ -365,6 +371,9 @@ static void *Thread( void *p_thread_data )
         p_pic->date = date_Get( &i_pts ) + GOOM_DELAY;
         p_pic->b_progressive = true;
         vout_PutPicture( p_thread->p_vout, p_pic );
+
+        lyrics_overlay_Update( p_thread->p_lyrics, p_thread->p_vout,
+                               date_Get( &i_pts ) );
     }
 
     goom_close( p_plugin_info );
@@ -395,5 +404,6 @@ static void Close( filter_t *p_filter )
 
     picture_pool_Release(p_thread->pool);
     video_format_Clean(&p_thread->fmt);
+    lyrics_overlay_Delete( p_thread->p_lyrics );
     free( p_thread );
 }
