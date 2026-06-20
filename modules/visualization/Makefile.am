@@ -24,7 +24,8 @@ if HAVE_GL
 visu_PLUGINS += libglspectrum_plugin.la
 endif
 
-libgoom_plugin_la_SOURCES = visualization/goom.c
+libgoom_plugin_la_SOURCES = visualization/goom.c \
+	visualization/lyrics_overlay.c visualization/lyrics_overlay.h
 libgoom_plugin_la_CPPFLAGS = $(AM_CPPFLAGS) $(GOOM_CFLAGS)
 libgoom_plugin_la_LDFLAGS = $(AM_LDFLAGS) $(visu_RPATH)
 libgoom_plugin_la_LIBADD = $(GOOM_LIBS) $(LIBM)
@@ -43,7 +44,8 @@ libvisual_plugin_la_SOURCES = \
 	visualization/visual/effects.c \
 	visualization/visual/fft.c visualization/visual/fft.h \
 	visualization/visual/window.c visualization/visual/window.h \
-	visualization/visual/window_presets.h
+	visualization/visual/window_presets.h \
+	visualization/lyrics_overlay.c visualization/lyrics_overlay.h
 libvisual_plugin_la_LIBADD = $(LIBM)
 visu_PLUGINS += libvisual_plugin.la
 

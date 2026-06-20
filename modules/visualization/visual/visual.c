@@ -40,6 +40,7 @@
 #include <vlc_picture_pool.h>
 
 #include "visual.h"
+#include "../lyrics_overlay.h"
 
 #include "window_presets.h"
 
@@ -109,6 +110,10 @@
 #define COLOR1_LONGTEXT N_( \
         "YUV-Color cube shifting across the V-plane ( 0 - 127 )." )
 
+#define SHOW_LYRICS_TEXT N_( "Show synchronized lyrics" )
+#define SHOW_LYRICS_LONGTEXT N_( \
+        "Overlay SYLT lyrics (from ID3v2 tags) on top of the visualization." )
+
 /* Default vout size */
 #define VOUT_WIDTH  800
 #define VOUT_HEIGHT 500
@@ -162,6 +167,9 @@ vlc_module_begin ()
              PEAK_WIDTH_TEXT, PEAK_WIDTH_LONGTEXT )
     add_integer("spect-peak-height", 1,
              PEAK_HEIGHT_TEXT, PEAK_HEIGHT_LONGTEXT )
+    set_section( N_("Lyrics"), NULL )
+    add_bool("visual-show-lyrics", true,
+             SHOW_LYRICS_TEXT, SHOW_LYRICS_LONGTEXT )
     set_capability( "visualization", 0 )
     set_callback( Open )
     add_shortcut( "visualizer")
@@ -184,6 +192,8 @@ typedef struct
     int             i_effect;
     bool            dead;
     vlc_thread_t    thread;
+
+    lyrics_overlay_t *p_lyrics;
 } filter_sys_t;
 
 static const struct vlc_filter_operations filter_ops = {
@@ -206,6 +216,7 @@ static int Open( vlc_object_t *p_this )
     if( unlikely (p_sys == NULL ) )
         return VLC_EGENERIC;
     p_sys->pool = NULL;
+    p_sys->p_lyrics = NULL;
 
     int width = var_InheritInteger( p_filter , "effect-width");
     int height = var_InheritInteger( p_filter , "effect-height");
@@ -216,6 +227,8 @@ static int Open( vlc_object_t *p_this )
     if( height < 400 )
         height = 400;
     height &= ~1;
+
+    p_sys->p_lyrics = lyrics_overlay_New( VLC_OBJECT(p_filter), width, height );
 
     p_sys->i_effect = 0;
     p_sys->effect   = NULL;
@@ -343,6 +356,7 @@ error:
     for( int i = 0; i < p_sys->i_effect; i++ )
         free( p_sys->effect[i] );
     free( p_sys->effect );
+    lyrics_overlay_Delete( p_sys->p_lyrics );
     free( p_sys );
     return VLC_EGENERIC;
 }
@@ -379,6 +393,10 @@ static block_t *DoRealWork( filter_t *p_filter, block_t *p_in_buf )
     p_outpic->date = p_in_buf->i_pts + (p_in_buf->i_length / 2);
 
     vout_PutPicture( p_sys->p_vout, p_outpic );
+
+    /* Overlay synchronized lyrics, if any */
+    lyrics_overlay_Update( p_sys->p_lyrics, p_sys->p_vout, p_in_buf->i_pts );
+
     return p_in_buf;
 }
 
@@ -431,5 +449,6 @@ static void Close( filter_t * p_filter )
 
     picture_pool_Release(p_sys->pool);
     free( p_sys->effect );
+    lyrics_overlay_Delete( p_sys->p_lyrics );
     free( p_sys );
 }
