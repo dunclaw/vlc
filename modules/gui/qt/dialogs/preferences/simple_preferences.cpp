@@ -540,6 +540,7 @@ SPrefsPanel::SPrefsPanel( qt_intf_t *_p_intf, QWidget *_parent,
                             ui.replayCombo );
             configGeneric<StringListConfigControl>( "audio-visual" , ui.visuLabel,
                             ui.visualisation);
+            configBool( "visual-show-lyrics", ui.showLyricsBox );
             configBool( "audio-time-stretch", ui.autoscaleBox );
 
             /* Audio Output Specifics */
