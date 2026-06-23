@@ -438,6 +438,10 @@ static void Close( filter_t * p_filter )
     vlc_queue_Kill(&p_sys->queue, &p_sys->dead);
     vlc_join( p_sys->thread, NULL );
 
+    /* Flush OSD subpictures before closing vout to ensure no pending lyric
+     * text rendering outlives the output device. */
+    vout_FlushSubpictureChannel( p_sys->p_vout, VOUT_SPU_CHANNEL_OSD );
+
     /* Free the list */
     for( int i = 0; i < p_sys->i_effect; i++ )
     {

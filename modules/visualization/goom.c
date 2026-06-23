@@ -396,6 +396,10 @@ static void Close( filter_t *p_filter )
 
     vlc_join( p_thread->thread, NULL );
 
+    /* Flush OSD subpictures before closing vout to ensure no pending lyric
+     * text rendering outlives the output device. */
+    vout_FlushSubpictureChannel( p_thread->p_vout, VOUT_SPU_CHANNEL_OSD );
+
     /* Free data */
     while( p_thread->i_blocks-- )
     {
